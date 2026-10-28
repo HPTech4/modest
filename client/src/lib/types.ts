@@ -83,10 +83,13 @@ export interface StoreSettings {
   updated_at?: string;
 }
 
+export const OFFICIAL_BRAND_NAME = "Mustaqeem Stitches and Collection";
+export const OFFICIAL_WHATSAPP_NUMBER = "09015790659";
+
 export const DEFAULT_SETTINGS: StoreSettings = {
-  brand_name: null,
+  brand_name: OFFICIAL_BRAND_NAME,
   logo_path: null,
-  whatsapp_number: null,
+  whatsapp_number: OFFICIAL_WHATSAPP_NUMBER,
   instagram_url: null,
   contact_email: null,
   contact_phone: null,

@@ -10,6 +10,7 @@ import { isSupabaseConfigured, SUPABASE_SETUP_MESSAGE } from "../lib/supabase";
 import { getAdminCategories, getAdminProducts, readableDataError } from "../lib/data";
 import { formatNaira, formatUpdatedDate } from "../lib/format";
 import type { Category, Product } from "../lib/types";
+import { OFFICIAL_BRAND_NAME } from "../lib/types";
 
 export function AdminLogin() {
   const { user, isAdmin, loading, signIn } = useAuth();
@@ -25,7 +26,7 @@ export function AdminLogin() {
     catch (cause) { setError(readableDataError(cause, "Sign-in could not be completed.")); }
     finally { setBusy(false); }
   }
-  return <div className="login-page"><Seo title="Owner sign in | Store dashboard" description="Private store-owner sign-in." noindex /><div className="login-card"><Link href="/" className="login-brand"><span className="brand-mark-mini">F</span><span>Your Brand <small>Store owner</small></span></Link><p className="eyebrow">Private access</p><h1>Sign in to your store</h1><p className="login-intro">Use the administrator account provisioned in Supabase. There is no public sign-up.</p>
+  return <div className="login-page"><Seo title={`Owner sign in | ${OFFICIAL_BRAND_NAME}`} description="Private store-owner sign-in." noindex /><div className="login-card"><Link href="/" className="login-brand"><span>{OFFICIAL_BRAND_NAME} <small>Store owner</small></span></Link><p className="eyebrow">Private access</p><h1>Sign in to your store</h1><p className="login-intro">Use the administrator account provisioned in Supabase. There is no public sign-up.</p>
     {!isSupabaseConfigured ? <div className="setup-callout"><LockKeyhole size={20} /><p>{SUPABASE_SETUP_MESSAGE}</p></div> : <form onSubmit={submit} className="form-stack"><label className="form-field">Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" required /></label><label className="form-field">Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required /></label>{error && <p className="field-error" role="alert">{error}</p>}<button className="button button--primary button--full" type="submit" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button></form>}
     <Link className="login-back" href="/">← Return to storefront</Link></div></div>;
 }
@@ -34,7 +35,7 @@ export function AdminGuard({ children }: { children: ReactNode }) {
   const { user, loading, isAdmin, verificationError } = useAuth();
   if (loading) return <div className="admin-loading"><LoadingState label="Verifying secure access" /></div>;
   if (!user) return <Redirect to="/admin/login" />;
-  if (!isAdmin) return <div className="login-page"><Seo title="Access restricted | Store dashboard" description="Administrator access is required." noindex /><div className="login-card"><LockKeyhole size={26} /><h1>Administrator access required</h1><p>{verificationError || "This signed-in account is not present in the store's administrator allowlist."}</p><p className="form-note">Ask the store owner to provision the correct Supabase Auth user ID in `admin_users`.</p><Link className="button button--secondary" href="/admin/login">Return to sign in</Link></div></div>;
+  if (!isAdmin) return <div className="login-page"><Seo title={`Access restricted | ${OFFICIAL_BRAND_NAME}`} description="Administrator access is required." noindex /><div className="login-card"><LockKeyhole size={26} /><h1>Administrator access required</h1><p>{verificationError || "This signed-in account is not present in the store's administrator allowlist."}</p><p className="form-note">Ask the store owner to provision the correct Supabase Auth user ID in `admin_users`.</p><Link className="button button--secondary" href="/admin/login">Return to sign in</Link></div></div>;
   return <AdminFrame>{children}</AdminFrame>;
 }
 
@@ -49,8 +50,8 @@ function AdminFrame({ children }: { children: ReactNode }) {
     { href: "/admin/settings", label: "Store settings", icon: Settings },
   ];
   async function logout() { try { await signOut(); toast.success("You have signed out."); navigate("/"); } catch (error) { toast.error(readableDataError(error, "Sign-out failed.")); } }
-  return <div className="admin-shell"><Seo title="Store dashboard | Owner" description="Private store management dashboard." noindex />
-    <aside className={`admin-sidebar ${menuOpen ? "admin-sidebar--open" : ""}`}><Link href="/" className="admin-brand"><span className="brand-mark-mini">F</span><span>Store desk<small>Modest fashion</small></span></Link><nav aria-label="Admin navigation">{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="admin-nav-link"><Icon size={18} />{label}</Link>)}<Link href="/admin/products/new" className="admin-nav-link"><PackagePlus size={18} />Add product</Link></nav><div className="admin-sidebar__bottom"><p className="admin-user-email">{user?.email}</p><button className="admin-nav-link admin-signout" onClick={logout}><LogOut size={18} />Sign out</button></div></aside>
+  return <div className="admin-shell"><Seo title={`Store dashboard | ${OFFICIAL_BRAND_NAME}`} description="Private store management dashboard." noindex />
+    <aside className={`admin-sidebar ${menuOpen ? "admin-sidebar--open" : ""}`}><Link href="/" className="admin-brand"><span>Store desk<small>{OFFICIAL_BRAND_NAME}</small></span></Link><nav aria-label="Admin navigation">{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} onClick={() => setMenuOpen(false)} className="admin-nav-link"><Icon size={18} />{label}</Link>)}<Link href="/admin/products/new" className="admin-nav-link"><PackagePlus size={18} />Add product</Link></nav><div className="admin-sidebar__bottom"><p className="admin-user-email">{user?.email}</p><button className="admin-nav-link admin-signout" onClick={logout}><LogOut size={18} />Sign out</button></div></aside>
     <div className="admin-main"><header className="admin-topbar"><button type="button" className="menu-toggle admin-menu-toggle" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-label="Toggle dashboard navigation"><Boxes size={20} /></button><p>Store management</p><Link href="/" target="_blank" className="admin-open-store">Open storefront <ExternalLink size={15} /></Link></header><main className="admin-content">{children}</main></div>
   </div>;
 }

@@ -8,7 +8,6 @@ export const DEMO_ASSETS = {
   hijab: "/manus-storage/async-images/wibZDKxW79B93X58fL0Cl2/image-3.webp",
   khimar: "/manus-storage/async-images/wibZDKxW79B93X58fL0Cl2/image-4.webp",
   gown: "/manus-storage/async-images/wibZDKxW79B93X58fL0Cl2/image-5.webp",
-  mark: "/manus-storage/async-images/maBGzsDcz6HkO2aH3t4dpc/image-1.webp",
 } as const;
 
 const categories: Category[] = [
@@ -16,8 +15,8 @@ const categories: Category[] = [
   { id: "demo-hijabs", name: "Hijabs", slug: "hijabs", description: "Soft textures and considered tones.", image_path: DEMO_ASSETS.hijab, is_visible: true, sort_order: 2 },
   { id: "demo-khimars", name: "Khimars", slug: "khimars", description: "Easy, flowing coverage.", image_path: DEMO_ASSETS.khimar, is_visible: true, sort_order: 3 },
   { id: "demo-jilbabs", name: "Jilbabs", slug: "jilbabs", description: "A considered layer with room to move.", image_path: DEMO_ASSETS.abaya, is_visible: true, sort_order: 4 },
-  { id: "demo-gowns", name: "Modest Gowns", slug: "modest-gowns", description: "Occasion dressing, kept effortless.", image_path: DEMO_ASSETS.gown, is_visible: true, sort_order: 5 },
-  { id: "demo-custom", name: "Custom-Made Outfits", slug: "custom-made-outfits", description: "Begin with a conversation about your idea.", image_path: DEMO_ASSETS.hero, is_visible: true, sort_order: 6 },
+  { id: "demo-custom", name: "Custom-Made Outfits", slug: "custom-made-outfits", description: "Begin with a conversation about your idea.", image_path: DEMO_ASSETS.hero, is_visible: true, sort_order: 5 },
+  { id: "demo-gowns", name: "Modest Gowns", slug: "modest-gowns", description: "Occasion dressing, kept effortless.", image_path: DEMO_ASSETS.gown, is_visible: true, sort_order: 6 },
 ];
 
 function demoProduct(input: Partial<Product> & Pick<Product, "id" | "name" | "slug" | "category_id">): Product {

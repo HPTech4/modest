@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, type Category, type Product, type ProductImage, type 
 const PRODUCT_SELECT = "*, category:categories(id,name,slug), product_images(id,product_id,storage_path,alt_text,sort_order)";
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_PRODUCT_IMAGES = 8;
+const SIGNED_PRODUCT_IMAGE_TTL_SECONDS = 15 * 60;
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function client() {
@@ -19,7 +20,7 @@ function errorMessage(error: unknown, fallback: string) {
 
 async function signedImageUrl(path: string): Promise<string | null> {
   if (path.startsWith("https://") || path.startsWith("/manus-storage/")) return path;
-  const { data, error } = await client().storage.from("product-images").createSignedUrl(path, 60 * 60 * 12);
+  const { data, error } = await client().storage.from("product-images").createSignedUrl(path, SIGNED_PRODUCT_IMAGE_TTL_SECONDS);
   if (error) return null;
   return data.signedUrl;
 }

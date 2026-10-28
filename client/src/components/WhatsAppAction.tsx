@@ -19,11 +19,13 @@ export default function WhatsAppAction({ label = "Order on WhatsApp", kind = "cu
   function handleClick() {
     let url: string | null = null;
     if (kind === "product" && product) {
-      url = buildProductEnquiryUrl(settings.whatsapp_number, product, { quantity: options?.quantity ?? 1, size: options?.size, colour: options?.colour });
+      const productUrl = typeof window === "undefined" ? null : new URL(`/product/${encodeURIComponent(product.slug)}`, window.location.origin).toString();
+      url = buildProductEnquiryUrl(settings.whatsapp_number, product, { businessName: settings.brand_name, productUrl, quantity: options?.quantity ?? 1, size: options?.size, colour: options?.colour });
     } else if (kind === "unavailable" && product) {
-      url = buildUnavailableEnquiryUrl(settings.whatsapp_number, product);
+      const productUrl = typeof window === "undefined" ? null : new URL(`/product/${encodeURIComponent(product.slug)}`, window.location.origin).toString();
+      url = buildUnavailableEnquiryUrl(settings.whatsapp_number, product, settings.brand_name, productUrl);
     } else {
-      url = buildCustomOrderUrl(settings.whatsapp_number, details ?? {});
+      url = buildCustomOrderUrl(settings.whatsapp_number, details ?? {}, settings.brand_name);
     }
     if (!url) {
       toast.error(settings.whatsapp_number ? "This enquiry could not be prepared. Check the product options and try again." : "WhatsApp is not configured yet. Please contact the store owner for ordering information.");

@@ -167,9 +167,11 @@ create policy store_settings_admin_update on public.store_settings
 for update to authenticated using (public.is_store_admin()) with check (public.is_store_admin());
 
 -- There is one public-facing settings record, but no secrets or private customer records.
-insert into public.store_settings (singleton, announcement_enabled)
-values (true, false)
-on conflict (singleton) do nothing;
+insert into public.store_settings (singleton, announcement_enabled, brand_name, whatsapp_number)
+values (true, false, 'Mustaqeem Stitches and Collection', '09015790659')
+on conflict (singleton) do update set
+  brand_name = excluded.brand_name,
+  whatsapp_number = excluded.whatsapp_number;
 
 insert into public.categories (name, slug, description, sort_order)
 values
@@ -177,8 +179,8 @@ values
   ('Hijabs', 'hijabs', null, 2),
   ('Khimars', 'khimars', null, 3),
   ('Jilbabs', 'jilbabs', null, 4),
-  ('Modest Gowns', 'modest-gowns', null, 5),
-  ('Custom-Made Outfits', 'custom-made-outfits', null, 6)
+  ('Custom-Made Outfits', 'custom-made-outfits', null, 5),
+  ('Modest Gowns', 'modest-gowns', null, 6)
 on conflict (slug) do nothing;
 
 -- Public storefront data is readable; RLS still limits each row. Authenticated DML

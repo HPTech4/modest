@@ -11,6 +11,7 @@ import { formatNaira } from "../lib/format";
 import { buildProductEnquiryUrl, buildUnavailableEnquiryUrl } from "../lib/whatsapp";
 import { useStore } from "../contexts/StoreContext";
 import type { Product } from "../lib/types";
+import { OFFICIAL_BRAND_NAME } from "../lib/types";
 
 export default function ProductDetail() {
   const [, params] = useRoute<{ slug: string }>("/product/:slug");
@@ -33,20 +34,22 @@ export default function ProductDetail() {
     if (product.sizes.length > 0 && !size) { setAttempted(true); toast.error("Choose a size before continuing."); return; }
     if (product.colours.length > 0 && !colour) { setAttempted(true); toast.error("Choose a colour before continuing."); return; }
     if (quantity < 1 || quantity > 99) { setAttempted(true); toast.error("Choose a quantity between 1 and 99."); return; }
-    const url = buildProductEnquiryUrl(settings.whatsapp_number, product, { size, colour, quantity });
+    const productUrl = typeof window === "undefined" ? null : new URL(`/product/${encodeURIComponent(product.slug)}`, window.location.origin).toString();
+    const url = buildProductEnquiryUrl(settings.whatsapp_number, product, { businessName: settings.brand_name, productUrl, size, colour, quantity });
     if (!url) { toast.error(settings.whatsapp_number ? "This enquiry could not be prepared. Check your selections." : "WhatsApp is not configured yet. Please contact the store owner for ordering information."); return; }
     window.open(url, "_blank", "noopener,noreferrer");
   }
   function handleUnavailableEnquiry() {
     if (!product) return;
-    const url = buildUnavailableEnquiryUrl(settings.whatsapp_number, product);
+    const productUrl = typeof window === "undefined" ? null : new URL(`/product/${encodeURIComponent(product.slug)}`, window.location.origin).toString();
+    const url = buildUnavailableEnquiryUrl(settings.whatsapp_number, product, settings.brand_name, productUrl);
     if (!url) { toast.error("WhatsApp is not configured yet. Please contact the store owner for information."); return; }
     window.open(url, "_blank", "noopener,noreferrer");
   }
   if (loading) return <SiteLayout><div className="page-container"><LoadingState label="Loading product" /></div></SiteLayout>;
   if (error) return <SiteLayout><div className="page-container"><ErrorState message={error} onRetry={load} /></div></SiteLayout>;
   if (!product) return <SiteLayout><div className="page-container"><EmptyState title="This piece is not available" message="It may have been unpublished or the link may have changed." actionHref="/shop" actionLabel="Return to the shop" /></div></SiteLayout>;
-  return <SiteLayout><Seo title={`${product.name} | ${product.category?.name ?? "Modest fashion"}`} description={product.description || `Explore ${product.name} in the modest-fashion collection.`} image={image} />
+  return <SiteLayout><Seo title={`${product.name} | ${OFFICIAL_BRAND_NAME}`} description={product.description || `Explore ${product.name}, a ${product.category?.name?.toLowerCase() || "modest fashion"} piece from ${OFFICIAL_BRAND_NAME} in Nigeria.`} image={image} imageAlt={product.images[activeImage]?.alt_text || `${product.name} from ${OFFICIAL_BRAND_NAME}`} type="product" />
     <div className="page-container product-detail"><div className="breadcrumb"><Link href="/shop">Shop</Link><span>/</span>{product.category && <><Link href={`/collections/${product.category.slug}`}>{product.category.name}</Link><span>/</span></>}<span>{product.name}</span></div>
       <div className="product-detail__layout"><div className="product-gallery"><div className="product-gallery__main"><ImageWithFallback src={image} alt={product.images[activeImage]?.alt_text || product.name} className="product-gallery__photo" fallbackLabel="Fashion image" />{product.is_demo && <span className="sample-ribbon">Illustrative sample styling</span>}{product.images.length > 1 && <div className="gallery-controls"><button type="button" aria-label="Previous image" onClick={() => setActiveImage((index) => (index - 1 + product.images.length) % product.images.length)}><ChevronLeft /></button><span>{activeImage + 1} / {product.images.length}</span><button type="button" aria-label="Next image" onClick={() => setActiveImage((index) => (index + 1) % product.images.length)}><ChevronRight /></button></div>}</div>
         {product.images.length > 1 && <div className="product-gallery__thumbs">{product.images.map((item, index) => <button key={item.id ?? item.storage_path} type="button" aria-label={`Show image ${index + 1}`} aria-pressed={activeImage === index} onClick={() => setActiveImage(index)}><ImageWithFallback src={item.url ?? item.storage_path} alt="" className="product-gallery__thumb" /></button>)}</div>}</div>

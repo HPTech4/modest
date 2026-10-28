@@ -1,69 +1,80 @@
-# Modest Fashion Storefront
+# Mustaqeem Stitches and Collection
 
-A static-first React 19 + TypeScript + Vite storefront for a Nigerian modest-fashion designer. It connects directly to the store owner's Supabase project for email/password authentication, PostgreSQL catalog data and private product-image storage. It does not include a payment system, checkout, automatic orders or a public administrator sign-up.
+A responsive React 19, TypeScript and Vite storefront for Mustaqeem Stitches and Collection, a Nigerian modest Islamic women's fashion business. It supports Supabase email/password owner authentication, a PostgreSQL catalog, owner-managed categories/settings, private product-image Storage and prefilled WhatsApp enquiries. It does not implement checkout, payment processing, order confirmation or inventory quantity tracking.
 
-The provided fashion images and sample listings are illustrative styling references only, not genuine product photographs or confirmed stock. No live Supabase project, business contact details, prices, policies or real products were supplied. The disconnected preview labels sample content clearly; add the owner's confirmed details before going live.
+The only owner-supplied public business details are the confirmed name and WhatsApp contact (`09015790659`, linked internationally as `2349015790659`). No genuine Mustaqeem inventory or prices, physical address, email, social profile, approved testimonial, confirmed delivery area, founder story, approved logo or exchange/privacy policy were supplied. Those remain blank or explicitly unconfirmed. Online-sourced reference examples are private, unavailable demo drafts—not Mustaqeem stock—and must be replaced or removed before publication. Fallback catalog imagery remains illustrative; the public wordmark is text until the owner configures an approved logo URL.
 
-Generated editorial images use Manus's reserved `/manus-storage/` route and are served separately from `dist/public/`; the current Preview returned HTTP 200 for all generated image assets. A direct Vite port bypasses this platform route. If exporting the site to a non-Manus static host, copy the illustrations to that host and update `client/src/lib/demo-data.ts`, `client/index.html` and `scripts/prerender.mjs`; the static build does not bundle the platform-managed image bytes.
+## Local development and public configuration
 
-## Requirements and local preview
-
-Use Node.js compatible with the Vite 7 toolchain and the pnpm version pinned in `package.json` (`pnpm@10.18.0`). From the project root:
+Use the pnpm version pinned in `package.json` (`pnpm@10.34.5`). Copy `.env.example` to an ignored `.env.local`, replace the placeholders, and never add `.env.local` to Git.
 
 ```sh
 pnpm install --frozen-lockfile
 cp .env.example .env.local
-# Edit .env.local with the public project URL, publishable/anon key and optional site URL.
 pnpm dev:static
 ```
 
-`pnpm dev:static` serves the storefront on `PORT` (3000 by default). The local preview remains in illustrative demo mode until both `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are configured. The admin login intentionally provides no registration path.
+- `VITE_SUPABASE_URL`: the owner's Supabase project base URL.
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: preferred browser-safe `sb_publishable_...` key. `VITE_SUPABASE_ANON_KEY` is the legacy browser-safe anon-role JWT fallback.
+- `VITE_SITE_URL`: exact HTTPS origin for canonical/social URLs and sitemap output. The currently assigned public origin is `https://modest-8tfhztyx.manus.space`; replace it only if the owner supplies a different production domain. Never use a Preview/internal address or invented domain.
 
-## Supabase setup
+The shared key policy accepts only the publishable-key format or an anon-role JWT, and permits a credential-free HTTPS project URL (or local HTTP Supabase development URL). Vite validates these values **before** bundling, so a service-role/secret/unrecognized key or URL credentials fail closed without printing the value or embedding it in the frontend. The browser client rechecks the same policy. Do not put server credentials in any `VITE_` variable. Local `.env` files are ignored; `.env.example` contains variable names and placeholders only.
 
-1. Create a Supabase project in the owner's account. Copy the project URL and the project **publishable** key (or legacy anon key) into `.env.local`. Never use `service_role`, `secret`, database password or other private keys in a `VITE_` variable or browser bundle.
-2. Apply `supabase/migrations/202610250001_modest_store_schema.sql` to the intended project using the Supabase SQL Editor or Supabase CLI. The migration creates `admin_users`, `categories`, `products`, `product_images` and the single public `store_settings` row; it also installs RLS, update timestamps, indexes, the six initial category rows and a **private** `product-images` bucket with MIME/size restrictions and Storage policies. Review the migration in the target project before applying it. Do not apply test writes or deletions against a production store.
-3. Create the owner's sign-in identity using Supabase Dashboard → Authentication → Users (invite or create the intended email/password account). In Supabase Authentication settings, disable public sign-ups. The application contains no signup route. Copy the exact Auth user UUID and, using the SQL Editor with a trusted project-owner role, add it to the allowlist:
+The public Supabase URL and browser-safe publishable key are configured in secure project settings; their values are not stored in this repository. Both migrations were applied and recorded; prior verification confirmed five RLS-enabled application tables, 20 named policies, a private product-image bucket, six seeded categories and the supplied brand/WhatsApp settings. An owner-authenticated Preview session successfully created six sourced demo rows through the existing dashboard, one in each category; all six are drafts and unavailable. Five source-listing photos were uploaded to the private product-image bucket. The Jilbab reference intentionally has no photo because the listing did not expose a verifiable product image. A read-only anonymous RLS query returned six visible categories and zero public products after seeding.
 
-   ```sql
-   insert into public.admin_users (user_id)
-   values ('REPLACE-WITH-THE-OWNER-AUTH-USER-UUID')
-   on conflict (user_id) do nothing;
-   ```
+Public Auth sign-ups are disabled and verified live. The assigned public origin is `https://modest-8tfhztyx.manus.space`, and the static build command is configured to use it for canonical and sitemap output. The current published page still serves an older generic build; the corrected Mustaqeem build has not yet been published. A read-only Auth settings check found that this assigned origin is not yet the Supabase Auth Site URL or in its redirect allowlist. Before relying on owner sign-in on the public domain, update Supabase Dashboard → Authentication → URL Configuration: set Site URL to `https://modest-8tfhztyx.manus.space` and add `https://modest-8tfhztyx.manus.space/**` to allowed redirect URLs. Do not enable public sign-ups. No Auth management credential is stored in this repository.
 
-   Only provision trusted owner IDs. The frontend checks the signed-in ID, and database/Storage RLS independently calls `public.is_store_admin()`; hiding an admin route is not the security boundary. The allowlist has no client-side insert/update/delete grants.
-4. Set the environment values and restart the dev server. Sign in at `/admin/login`, then configure the real brand name, public logo/contact details, full international WhatsApp number, Instagram URL and approved copy in **Store settings**. The database migration seeds category names but deliberately creates no fake product records, testimonials, business contact, prices or policies.
-5. Add a product and its confirmed details. The image form accepts JPEG, PNG and WebP up to 5 MiB each, up to eight images per product. The browser uploads to private paths of the form `products/{product-uuid}/{random-uuid}.{jpg|png|webp}`. Published image paths are served through time-limited signed URLs; draft images are available only to the allowlisted admin. Unpublishing revokes future signed-URL issuance, though already issued signed URLs remain usable until they expire. Product deletion and individual image removal clear database references before Storage cleanup; if an object cleanup fails, remove the now-unreferenced object from the `product-images` bucket in the Supabase dashboard. Category deletion is blocked while referenced by a product.
+## Supabase migrations and owner provisioning
 
-### What the database policies allow
+These migrations have already been applied to the connected Supabase project. Do not reapply them there. For a separate fresh project, apply them in filename order after review in the SQL Editor or via the Supabase CLI:
 
-- Anonymous and authenticated visitors can read **published** products, **visible** categories, public store settings, and images referenced by published products. They cannot write products, categories, settings, image metadata or Storage objects.
-- Only an authenticated user whose exact UUID is in `public.admin_users` can manage product/category/settings rows or product images. `admin_users` itself is read-only to a logged-in user for their own UUID.
-- Product price is stored as integer minor units (kobo) in `price_minor`, with SQL `NULL` for “enquire for price”; zero is a valid price and negative values are rejected. Currency is NGN.
-- The `product-images` bucket is private. Storage policies restrict file type, maximum size and the safe product-specific UUID path pattern. Upload, replace and delete operations require the admin allowlist helper.
-- Public settings are public by design; store only details meant to appear on the storefront. Never place credentials, customer data or passwords in `store_settings`.
+1. `supabase/migrations/202610250001_modest_store_schema.sql` creates the catalog/settings/allowlist tables, indexes and triggers, RLS, a private product-image bucket and its policies. It seeds the six requested category types and supplied business name/local WhatsApp number, but no fabricated products, prices, address, email, social link, testimonial or policy.
+2. `supabase/migrations/202610270001_mustaqeem_identity.sql` updates an existing singleton settings row to the official supplied name/contact, orders Custom-Made Outfits before Modest Gowns, and aligns public image reads with published products in visible categories.
 
-## Development, tests and build
+In Supabase Authentication, enable email/password sign-in and **disable public sign-ups**. Create or invite the one owner from Authentication → Users. Copy that user's UUID and provision it in `public.admin_users` through the trusted SQL Editor (never from browser code):
 
-```sh
-pnpm dev:static          # Vite static preview, PORT defaults to 3000
-pnpm check               # TypeScript check
-pnpm test                # Vitest suite
-pnpm build:static        # Static production output in dist/public/
+```sql
+insert into public.admin_users (user_id)
+values ('REPLACE-WITH-THE-OWNER-AUTH-USER-UUID')
+on conflict (user_id) do nothing;
 ```
 
-The storefront uses React/Wouter routes; `client/public/manus-routes.json` lists all pages, including dynamic category/product/admin patterns. `pnpm build:static` prerenders route-specific initial HTML, headings and metadata for stable storefront pages and the six starter categories. Canonical and absolute social-image URLs are emitted only when a real HTTPS `VITE_SITE_URL` is configured. Admin routes are `noindex` and `robots.txt` disallows `/admin`.
+In Supabase Authentication → URL Configuration, set Site URL to `https://modest-8tfhztyx.manus.space` and add that origin (including `/**`) and the actual local development origin (for example `http://localhost:3000/**`) to allowed redirect URLs. A read-only live settings check currently finds the assigned origin missing from both Site URL and the redirect allowlist; owner sign-in and the Auth callback on the public domain remain unverified until this is corrected. Update these again if the owner supplies a custom domain. This application uses email/password sign-in—not public registration or OAuth.
 
-Product/category records are live Supabase data and must appear without rebuilding or redeploying. Because this project remains a static SPA and no live catalog was supplied, product-specific initial HTML cannot be generated at build time; product descriptions and page metadata are populated after the browser loads the public RLS-protected record. Crawlers need JavaScript for product-specific content. Enabling request-time SSR would require enabling an additional project server capability and is intentionally not part of this static-first setup. Missing or unpublished products and unknown client routes perform a full navigation to `/404`; the published frontend-output path returns that endpoint with HTTP 404.
+The UI allowlist check is not the security boundary: RLS and Storage policies independently restrict management to the exact authenticated UUID in `admin_users`. Public database reads are limited to published products, visible categories and public store settings; anon users cannot write. Keep `product-images` private. The dashboard accepts up to eight JPEG/PNG/WebP images at 5 MiB each and uses randomized product-specific storage keys. Signed image URLs expire after 15 minutes. A bearer link already issued while a product was public can remain usable for up to that remaining 15-minute window after unpublishing or hiding its category; new URLs are blocked by RLS/Storage policies. Removing database references precedes object cleanup; if storage cleanup fails after the database change, remove the unreferenced object from the Storage dashboard.
 
-When a valid HTTPS `VITE_SITE_URL` is present, the build writes a sitemap containing only stable public routes and adds its location to `robots.txt`; private admin pages and changeable categories/products are not listed. Without a configured origin, canonical/social absolute URLs are omitted and the Manus gateway may provide its default sitemap.
+The browser-safe public Supabase build values are already configured, and public sign-ups are disabled. Owner login and RLS-protected product/image writes succeeded in Preview. Six private demo drafts are present; every row is marked unavailable and unpublished, with source provenance in its description. The rows are examples from outside sellers, not Mustaqeem inventory. See [`DEMO_CATALOG_SOURCES.md`](DEMO_CATALOG_SOURCES.md) before reviewing or deleting them in the admin page. Sign in at `/admin/login` and review **Store settings**. The supplied brand/WhatsApp values are seeded. Add a physical location, email, Instagram/social link, approved testimonial, logo, founder story and confirmed policy only when the business owner provides it. Never store credentials, passwords or private customer data in public settings.
 
-Before launch, verify an owner account can sign in and log out; a signed-in but non-allowlisted user cannot access management; anonymous writes are denied; a draft is absent from the shop/search/category/product route and its images cannot be signed; a published item can be browsed and unpublished; a product with no sizes/colours displays no selectors; null price is not shown as zero; file uploads reject unsupported type/oversize/count; category deletion is restricted while referenced; and settings persist. Check a real WhatsApp enquiry on a device with WhatsApp installed: opening WhatsApp is only an enquiry hand-off, not a completed order or payment. Review Auth, RLS and Storage policy behavior in the target Supabase project before production. Do not perform destructive verification against real customer data.
+## WhatsApp enquiries
 
-## Deployment
+The supplied local number `09015790659` normalizes to `https://wa.me/2349015790659`. Product enquiries include the business name, product name, only selected options that the product actually offers, and the current product page URL when available; they ask the store to confirm availability and ordering details. Custom-order enquiries are prefilled too. Links open only after a visitor chooses an action. They do not perform checkout, place an order or prove payment. No sensitive measurements are requested.
 
-Build a static site with `pnpm build:static`, publishing `dist/public/` (the Webdev static build configuration uses this directory). Ensure the host's extensionless SPA fallback covers dynamic `/collections/*`, `/product/*` and `/admin/*` links; retain the platform `/404` status behavior. Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and, when canonical/social URLs are wanted, a real `VITE_SITE_URL` as public build environment values. Keep the `product-images` bucket private and the migration's policies enabled in production. After deploy, test public visibility, owner sign-in, admin writes, signed-image reads and expected anonymous denial on that live project.
+## SEO, rendering and hosting constraints
 
-Latest local checks: `pnpm check` passed; `pnpm test` passed (3 test files, 12 tests); `pnpm build:static` passed and generated 23 route HTML shells. Vite reports a non-blocking main-chunk advisory (552.57 kB minified, 162.61 kB gzip); route-level code splitting is enabled.
+`pnpm build:static` writes meaningful route-specific initial HTML, titles/descriptions, keywords, Open Graph/Twitter tags and internal links for stable public pages and visible categories. With valid public Supabase URL/key values available during the build, it also queries public-visible categories and published rows under RLS to prerender catalog HTML and build the sitemap from the same snapshot. The query and snapshot sanitizer also filter for published products and visible categories, validate slugs and escape dynamic HTML/metadata. Private rows, draft data and signed image URLs are not embedded. Automated isolated mock-service checks confirmed these rules without connecting to a real database.
 
-No live Supabase Auth, database, Storage upload, real WhatsApp hand-off or production deployment was executed in this environment because no user-owned Supabase project credentials or business information were provided. Any check is reported only if it was actually run.
+The browser storefront continues to query live published catalog data so ordinary visitor changes appear without a website rebuild. However, crawler-visible product/category HTML and sitemap are snapshots created at the last build; a newly published item gets a product-specific crawler page and sitemap entry only after another site build/deploy. Private product photos use signed URLs and are not stable public social images. The prerender therefore uses the explicitly labelled illustrative brand styling image for product social cards rather than implying that it depicts the product.
+
+Canonical links, `og:url`, absolute social-image URLs and the absolute sitemap are emitted only for an explicit HTTPS `VITE_SITE_URL`; localhost, reserved/test hosts and all configured Manus Preview/internal host families are rejected by the same shared validator in the browser and prerenderer. Prerendered public routes are indexable; generated private admin route shells carry `noindex,nofollow` and are omitted from the sitemap. `robots.txt` disallows `/admin`, and the admin app applies client-side `noindex,nofollow`; however, an arbitrary dynamic product-edit URL may fall back to the indexable homepage shell on some static hosts before JavaScript runs. A host-level noindex header/route rule or a non-dynamic editor URL is needed if production fallback behavior exposes that case. No fabricated ratings/reviews, prices or product structured data are included. Contact copy invites visitors in Ibadan, Ayegun, Olomi or Olunde to ask about current availability; it does not promise service or delivery there.
+
+The site remains static-first. The assigned host is configured for the build, but its current published deployment is still the older generic version. Static build and Preview checks verify generated route shells and sitemap content; they do not verify production response status, canonical delivery, redirect/trailing-slash behavior or sitemap reachability until the corrected build is published. The dynamic admin-edit fallback caveat above also requires host-level verification. A separate publish decision is still pending.
+
+Preview images use Manus's reserved `/manus-storage/` asset route and were verified in Manus Preview for this project. A non-Manus static export must copy those assets to its public storage and update references in `client/src/lib/demo-data.ts`, `client/index.html` and `scripts/prerender.mjs`.
+
+## Checks and remaining setup
+
+Current verified checks include:
+
+```sh
+pnpm check
+pnpm test
+VITE_SITE_URL=https://modest-8tfhztyx.manus.space pnpm build:static
+node --check scripts/supabase-key-policy.mjs
+node --check scripts/site-origin-policy.mjs
+node --check scripts/prerender.mjs
+git diff --check
+```
+
+The TypeScript check passed, and the unit suite passed (15 tests). The refreshed full dependency tree has zero critical and zero high advisories; the production tree also has zero critical/high. The remaining findings are two moderate development-only advisories: `esbuild@0.18.20` through `drizzle-kit>@esbuild-kit` and `postcss-selector-parser@6.0.10` through `@tailwindcss/typography`; and one low production-tree advisory, `katex@0.16.47` via `streamdown` (patched release `>=0.18.2`). `pnpm audit` exits nonzero because of those residual moderate/low items; none are critical or high. `pnpm install --frozen-lockfile` succeeded. The assigned-origin static build emitted 23 route shells, six categories, zero published products and a valid 16-URL sitemap; the 19-route manifest was verified as JSON with no 404-only entry. A live anonymous RLS query returned 200 with six categories and zero products. Public sign-ups are disabled; the assigned origin is missing from Supabase Auth Site URL/redirect settings. Owner login and six draft/image writes succeeded in Preview. Vite still warns that the main JavaScript chunk exceeds 500 kB after minification; builds succeed and route chunks are lazy-loaded.
+
+Before launch, update Supabase Auth URL Configuration as described above, then verify owner login/callback on the assigned origin. The corrected Mustaqeem build is not yet published; the live host still serves the older generic version. After an explicit publish, verify production routes, canonicals, sitemap, robots, fallback status and WhatsApp hand-off. The dynamic admin-edit fallback caveat also needs production-host verification. The six demo items are deliberately drafts/unavailable and must be replaced or removed before any demo photo or third-party listing is published as Mustaqeem inventory. Obtain approved logo, policies or contact details only from the business owner. Do not treat Preview or demo data as live inventory.

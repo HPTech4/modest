@@ -1,9 +1,13 @@
 import { useEffect } from "react";
+import { OFFICIAL_BRAND_NAME } from "../lib/types";
+import { normalizePublicSiteOrigin } from "../../../scripts/site-origin-policy.mjs";
 
 interface SeoProps {
   title: string;
   description: string;
   image?: string;
+  imageAlt?: string;
+  type?: "website" | "product";
   noindex?: boolean;
 }
 
@@ -23,27 +27,23 @@ function removeMeta(name: string, property = false) {
   document.head.querySelector(`meta[${attribute}="${name}"]`)?.remove();
 }
 
-export default function Seo({ title, description, image, noindex = false }: SeoProps) {
+export default function Seo({ title, description, image, imageAlt, type = "website", noindex = false }: SeoProps) {
   useEffect(() => {
+    const currentPath = window.location.pathname;
+    const shouldNoindex = noindex || currentPath === "/404" || /^\/admin(?:\/|$)/.test(currentPath);
     document.title = title;
     upsertMeta("description", description);
-    upsertMeta("robots", noindex ? "noindex,nofollow" : "index,follow");
+    upsertMeta("robots", shouldNoindex ? "noindex,nofollow" : "index,follow");
     upsertMeta("og:title", title, true);
     upsertMeta("og:description", description, true);
-    upsertMeta("og:type", "website", true);
-    upsertMeta("og:site_name", "Modest Fashion", true);
+    upsertMeta("og:type", type, true);
+    upsertMeta("og:site_name", OFFICIAL_BRAND_NAME, true);
     upsertMeta("twitter:title", title);
     upsertMeta("twitter:description", description);
-    const configuredUrl = import.meta.env.VITE_SITE_URL?.trim();
-    let canonicalUrl: string | null = null;
-    if (configuredUrl) {
-      try {
-        const site = new URL(configuredUrl);
-        if (site.protocol === "https:" && !site.username && !site.password && !site.hostname.endsWith(".example")) {
-          canonicalUrl = new URL(window.location.pathname, site.origin).toString();
-        }
-      } catch { /* Omit canonical tags until a valid public HTTPS origin is configured. */ }
-    }
+    const siteOrigin = normalizePublicSiteOrigin(import.meta.env.VITE_SITE_URL);
+    const canonicalUrl = siteOrigin && !shouldNoindex
+      ? new URL(currentPath, `${siteOrigin}/`).toString()
+      : null;
     if (canonicalUrl) {
       let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
       if (!canonical) {
@@ -64,13 +64,15 @@ export default function Seo({ title, description, image, noindex = false }: SeoP
     } catch { /* Ignore an unresolvable optional image URL. */ }
     if (absoluteImage) {
       upsertMeta("og:image", absoluteImage, true);
+      upsertMeta("og:image:alt", imageAlt || "Illustrative modest-fashion styling reference, not a product photograph", true);
       upsertMeta("twitter:image", absoluteImage);
       upsertMeta("twitter:card", "summary_large_image");
     } else {
       removeMeta("og:image", true);
+      removeMeta("og:image:alt", true);
       removeMeta("twitter:image");
       upsertMeta("twitter:card", "summary");
     }
-  }, [title, description, image, noindex]);
+  }, [title, description, image, imageAlt, type, noindex]);
   return null;
 }

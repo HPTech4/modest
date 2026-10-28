@@ -11,6 +11,7 @@ import { ErrorState, EmptyState, LoadingState } from "../components/States";
 import { getPublicProducts, readableDataError } from "../lib/data";
 import { DEMO_ASSETS } from "../lib/demo-data";
 import type { Product } from "../lib/types";
+import { OFFICIAL_BRAND_NAME } from "../lib/types";
 import { useStore } from "../contexts/StoreContext";
 
 export default function Home() {
@@ -26,10 +27,10 @@ export default function Home() {
   const featured = products.filter((product) => product.is_featured);
   const newArrivals = products.filter((product) => product.is_new_arrival);
   return <SiteLayout>
-    <Seo title={`${settings.brand_name || "Your Brand"} | Modest fashion` } description="Discover thoughtfully designed modest wear that brings together comfort, confidence, and timeless style." image={DEMO_ASSETS.hero} />
+    <Seo title={`${settings.brand_name || OFFICIAL_BRAND_NAME} | Modest wear in Nigeria`} description="Mustaqeem Stitches and Collection offers modest Islamic women's fashion in Nigeria, including abayas, hijabs, khimars, jilbabs, modest gowns and custom-made outfits." image={DEMO_ASSETS.hero} />
     <section className="hero">
       <div className="hero__copy"><p className="eyebrow">A considered wardrobe</p><h1>Elegance in<br /><em>Every Layer.</em></h1><p className="hero__description">Discover thoughtfully designed modest wear that brings together comfort, confidence, and timeless style.</p><div className="hero__actions"><Link className="button button--primary" href="/shop">Explore the Collection <ArrowRight size={17} /></Link><Link className="button button--text" href="/contact#custom-order">Order on WhatsApp <ArrowUpRight size={17} /></Link></div><p className="hero__note">Illustrative fashion styling · sample imagery</p></div>
-      <div className="hero__image"><ImageWithFallback src={DEMO_ASSETS.hero} alt="Illustrative modest-fashion styling in warm ivory and sand tones" className="hero__photo" fallbackLabel="Editorial fashion image" /><div className="hero__image-caption"><span>01 / 04</span><span>Layers of quiet confidence</span></div></div>
+      <div className="hero__image"><ImageWithFallback src={DEMO_ASSETS.hero} alt="Illustrative modest-fashion styling in warm ivory and sand tones" className="hero__photo" fallbackLabel="Editorial fashion image" loading="eager" fetchPriority="high" /><div className="hero__image-caption"><span>01 / 04</span><span>Layers of quiet confidence</span></div></div>
       <span className="hero__side-label" aria-hidden="true">MODEST DRESSING, CONSIDERED</span>
     </section>
     <section className="section category-section">

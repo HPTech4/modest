@@ -2,9 +2,8 @@ import { useState, type ReactNode } from "react";
 import { Link } from "wouter";
 import { Menu, X } from "lucide-react";
 import { useStore } from "../contexts/StoreContext";
-import { DEMO_ASSETS } from "../lib/demo-data";
-import ImageWithFallback from "./ImageWithFallback";
 import WhatsAppAction from "./WhatsAppAction";
+import { OFFICIAL_BRAND_NAME } from "../lib/types";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -16,10 +15,9 @@ const navItems = [
 
 function Brand() {
   const { settings } = useStore();
-  const mark = settings.logo_path?.startsWith("https://") ? settings.logo_path : DEMO_ASSETS.mark;
-  return <Link href="/" className="brand-lockup" aria-label={`${settings.brand_name || "Your Brand"} home`}>
-    <ImageWithFallback src={mark} alt="" className="brand-mark" fallbackLabel="" />
-    <span className="brand-name">{settings.brand_name?.trim() || "Your Brand"}</span>
+  return <Link href="/" className="brand-lockup" aria-label={`${settings.brand_name || OFFICIAL_BRAND_NAME} home`}>
+    {settings.logo_path?.startsWith("https://") && <img src={settings.logo_path} alt="" className="brand-mark" />}
+    <span className="brand-name">{settings.brand_name?.trim() || OFFICIAL_BRAND_NAME}</span>
   </Link>;
 }
 
@@ -47,9 +45,9 @@ function Footer() {
       <div className="site-footer__brand"><Brand /><p>Thoughtfully considered modest wear, with each detail chosen to feel at ease.</p></div>
       <div><p className="eyebrow">Explore</p><ul>{categories.slice(0, 4).map((category) => <li key={category.id}><Link href={`/collections/${category.slug}`}>{category.name}</Link></li>)}<li><Link href="/shop">Shop all</Link></li></ul></div>
       <div><p className="eyebrow">Information</p><ul><li><Link href="/sizing">Sizing</Link></li><li><Link href="/delivery">Delivery</Link></li><li><Link href="/exchanges">Exchange information</Link></li><li><Link href="/privacy">Privacy</Link></li><li><Link href="/faq">FAQ</Link></li></ul></div>
-      <div><p className="eyebrow">Get in touch</p><ul>{settings.contact_email && <li><a href={`mailto:${settings.contact_email}`}>{settings.contact_email}</a></li>}{settings.contact_phone && <li><a href={`tel:${settings.contact_phone}`}>{settings.contact_phone}</a></li>}{settings.location_text && <li>{settings.location_text}</li>}{settings.instagram_url && <li><a href={settings.instagram_url} target="_blank" rel="noreferrer">Instagram ↗</a></li>}<li><WhatsAppAction label="Message the store" variant="text" /></li></ul></div>
+      <div><p className="eyebrow">Get in touch</p><ul>{settings.contact_email && <li><a href={`mailto:${settings.contact_email}`}>{settings.contact_email}</a></li>}{settings.contact_phone && <li><a href={`tel:${settings.contact_phone}`}>{settings.contact_phone}</a></li>}{settings.whatsapp_number && <li>WhatsApp: {settings.whatsapp_number}</li>}{settings.location_text && <li>{settings.location_text}</li>}{settings.instagram_url && <li><a href={settings.instagram_url} target="_blank" rel="noreferrer">Instagram ↗</a></li>}<li><WhatsAppAction label="Message the store" variant="text" /></li></ul></div>
     </div>
-    <div className="site-footer__bottom"><span>© {new Date().getFullYear()} {settings.brand_name?.trim() || "Your Brand"}. All rights reserved.</span><span>Modest fashion · Nigeria</span></div>
+    <div className="site-footer__bottom"><span>© {new Date().getFullYear()} {settings.brand_name?.trim() || OFFICIAL_BRAND_NAME}. All rights reserved.</span><span>Modest Islamic women's fashion · Nigeria</span></div>
   </footer>;
 }
 

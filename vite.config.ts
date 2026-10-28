@@ -3,8 +3,9 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
-import { defineConfig, type Plugin, type ViteDevServer } from "vite";
+import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from "vite";
 import { publicPlatformScript } from "./server/_core/publicConfig";
+import { isBrowserSafeSupabaseKey, isSafeSupabaseProjectUrl } from "./scripts/supabase-key-policy.mjs";
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -170,7 +171,24 @@ function vitePluginPublicPlatformConfig(): Plugin {
 
 const plugins = [vitePluginPublicPlatformConfig(), react(), tailwindcss(), jsxLocPlugin(), vitePluginManusDebugCollector()];
 
-export default defineConfig({
+function validatePublicSupabaseEnvironment(mode: string) {
+  const fileEnv = loadEnv(mode, import.meta.dirname, "VITE_");
+  const publicKeyNames = ["VITE_SUPABASE_PUBLISHABLE_KEY", "VITE_SUPABASE_ANON_KEY"];
+  for (const name of publicKeyNames) {
+    const value = String(process.env[name] || fileEnv[name] || "").trim();
+    if (value && !isBrowserSafeSupabaseKey(value)) {
+      throw new Error(`Refusing to expose ${name}: only a valid Supabase publishable key or anon-role JWT is allowed.`);
+    }
+  }
+  const projectUrl = String(process.env.VITE_SUPABASE_URL || fileEnv.VITE_SUPABASE_URL || "").trim();
+  if (projectUrl && !isSafeSupabaseProjectUrl(projectUrl)) {
+    throw new Error("Refusing to expose an invalid Supabase project URL; credentials, query parameters and non-HTTPS public URLs are not allowed.");
+  }
+}
+
+export default defineConfig(({ mode }) => {
+  validatePublicSupabaseEnvironment(mode);
+  return {
   plugins,
   resolve: {
     alias: {
@@ -202,4 +220,5 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
+  };
 });

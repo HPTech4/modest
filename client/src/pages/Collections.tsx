@@ -8,10 +8,11 @@ import { EmptyState, ErrorState, LoadingState, PageHeading } from "../components
 import { getPublicProducts, readableDataError } from "../lib/data";
 import type { Product } from "../lib/types";
 import { useStore } from "../contexts/StoreContext";
+import { OFFICIAL_BRAND_NAME } from "../lib/types";
 
 export function CollectionsIndex() {
   const { categories, isDemo } = useStore();
-  return <SiteLayout><Seo title="Collections | Modest fashion" description="Explore abayas, hijabs, khimars, jilbabs, modest gowns and custom-made outfits." /><div className="page-container"><PageHeading eyebrow="Explore by collection" title="A layer for every moment" description="Browse the categories and find the kind of piece you have in mind." /><div className="category-grid category-grid--page">{categories.map((category) => <CategoryCard key={category.id} category={category} demo={isDemo} />)}</div></div></SiteLayout>;
+  return <SiteLayout><Seo title={`Collections | ${OFFICIAL_BRAND_NAME} Nigeria`} description="Explore abayas, hijabs, khimars, jilbabs, custom-made outfits and modest gowns from Mustaqeem Stitches and Collection in Nigeria." /><div className="page-container"><PageHeading eyebrow="Explore by collection" title="Modest-fashion collections in Nigeria" description="Browse abayas, hijabs, khimars, jilbabs, custom-made outfits and modest gowns from Mustaqeem Stitches and Collection." /><div className="category-grid category-grid--page">{categories.map((category) => <CategoryCard key={category.id} category={category} demo={isDemo} />)}</div></div></SiteLayout>;
 }
 
 export function CategoryPage() {
@@ -28,7 +29,7 @@ export function CategoryPage() {
     if (!slug || storeLoading || storeError || category) return;
     window.location.replace("/404");
   }, [category, slug, storeError, storeLoading]);
-  return <SiteLayout><Seo title={`${category?.name ?? "Collection"} | Modest fashion`} description={category?.description || `Browse ${category?.name ?? "modest fashion"} from the collection.`} />
+  return <SiteLayout><Seo title={`${category?.name ?? "Collection"} in Nigeria | Mustaqeem Stitches`} description={category?.description || `Browse published ${category?.name?.toLowerCase() ?? "modest fashion"} from Mustaqeem Stitches and Collection in Nigeria. Product details and availability are confirmed by the live catalogue.`} />
     <div className="page-container"><div className="breadcrumb"><Link href="/collections">Collections</Link><span>/</span><span>{category?.name ?? "Collection"}</span></div>
       <PageHeading eyebrow="Collection" title={category?.name ?? "Collection"} description={category?.description ?? "Explore the published pieces in this collection."} />
       {storeError ? <ErrorState message={storeError} onRetry={() => { void reload(); }} /> : loading ? <LoadingState label="Loading this collection" /> : error ? <ErrorState message={error} onRetry={load} /> : products.length ? <div className="product-grid">{products.map((product) => <ProductCard key={product.id} product={product} demo={isDemo} />)}</div> : <EmptyState title="This collection is still taking shape" message="There are no published products in this category yet. Check back later or ask about a custom piece." actionHref="/contact#custom-order" actionLabel="Ask about a custom order" />}
